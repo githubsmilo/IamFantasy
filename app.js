@@ -6,17 +6,27 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var yahooFantasy = require('yahoo-fantasy-without-auth');
+var mongoose = require('mongoose');
+
+var userSchema = new mongoose.Schema({
+  test1: String,
+  test2: String,
+  test3: String
+});
+exports.userModel = mongoose.model('User', userSchema);
+mongoose.connect(process.env.MONGODB || 'localhost');
 
 exports.yf = new yahooFantasy();
 
-var routes = require('./routes/index');
-var auth = require('./routes/auth');
+var auth = require('./routes/auth'),
+    viewRoute = require('./routes/view'),
+    apiRoute = require('./routes/api');
 
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.engine('html', require('ejs').renderFile); app.set('view engine', 'html');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -31,7 +41,8 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
+app.use('/', viewRoute);
+app.use('/api', apiRoute);
 app.use('/auth', auth);
 
 // catch 404 and forward to error handler
